@@ -361,7 +361,7 @@ if knapp:
     ax10 = fig.add_subplot(326)
     bar.progress(100)
     ax10 = plot_maks_dognnedbor(df)
-    plt.savefig('samle_figur1.png')
+    #plt.savefig('samle_figur1.png')
     st.pyplot(fig)
     
 #plot_something(data1, ax1, color='blue')
