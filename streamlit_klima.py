@@ -8,7 +8,7 @@ import matplotlib.cbook as cbook
 from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
                                AutoMinorLocator)
 from matplotlib.dates import DateFormatter
-#from windrose import WindroseAxes
+from windrose import WindroseAxes
 import requests
 import datetime
 import numpy as np
@@ -306,20 +306,62 @@ def plot_maks_dognnedbor(df, ax1=None):
 
     return ax1
 
-# def plot_generell_vind(df, ax1=None):
+def plot_vind(ax1=None):
+    windDirection = nve_api(lat, lon, '2018-03-01', '2019-12-31', 'windDirection10m24h06') #Vindretning for døgnet
+    windSpeed = nve_api(lat, lon, '2018-03-01', '2019-12-31', 'windSpeed10m24h06')
+    rr_vind = nve_api(lat, lon, '2018-03-01', '2019-12-31', 'rr')
+    tm_vind = nve_api(lat, lon, '2018-03-01', '2019-12-31', 'tm')
 
-#     if ax1 is None:
-#         ax1 = plt.gca()
+    startwind = datetime.datetime(2018, 3, 1)
+    endwind = datetime.datetime(2019, 12, 31)
 
-#     ax1.bar(dfwx['retning'], dfwx['windSpeed10m24h06'], normed=True, opening=1.8)
-#     ax1.set_title('Generell vindretning - Inndelt i i vindstyrke (m/s)')
-#     ax1.set_legend()
-#     ax2.bar(dfw['retning'], dfw['rr'], normed=True,opening=1.8)
-#     ax2.set_title('Vindretning ved nedbør som snø (mm)', )
-#     ax2.set_legend()
-#     ax3.bar(dfwxrr['retning'], dfwxrr['rr'], normed=True, opening=1.8)
-#     ax3.set_title('Vindretning ved nedbør (mm)')
-#     ax3.set_legend()
+    #Lager dataframe for daglig vindretning og styrke, sammen med nedbør?
+    dfw = pd.DataFrame(windDirection['Data']) #Henter inn verdiar for vindretning
+    dfw['dato'] = pd.date_range(startwind, endwind) #Lager til datoer som ikkje kjem automatisk frå NVE
+    dfw.rename({0 : windDirection['Theme']}, axis=1, inplace=True) #Gir nytt navn til kolonne med windretning
+    dfw.set_index('dato', inplace=True) #Setter dato som index i dataframe
+    dfw[windSpeed['Theme']] = windSpeed['Data']
+    dfw[rr_vind['Theme']] = rr_vind['Data']
+    dfw[tm_vind['Theme']] = tm_vind['Data']
+
+    dfwx = dfw.copy()
+    indexNames = dfw[dfw['windSpeed10m24h06'] <= 3].index
+    dfw.drop(indexNames , inplace=True)
+    indexNames = dfw[dfw['rr'] <= 5].index
+    dfw.drop(indexNames , inplace=True)
+    indexNames = dfw[dfw['tm'] >= 1].index
+    dfw.drop(indexNames , inplace=True)
+
+    #dfw[dfw > 60000] = 0
+    indexNames = dfwx[dfwx['windDirection10m24h06'] >= 1000].index
+    dfwx.drop(indexNames , inplace=True)
+    indexNames = dfwx[dfwx['windSpeed10m24h06'] >= 1000].index
+    dfwx.drop(indexNames , inplace=True)
+
+
+    #Lager dataframe med verdier for nedbør over 1 mm
+    dfwxrr = dfwx.copy()
+    indexNames = dfwxrr[dfwxrr['rr'] <= 5].index
+    dfwxrr.drop(indexNames , inplace=True)
+
+    dfw['retning'] = dfw['windDirection10m24h06']*45
+    dfwx['retning'] = dfwx['windDirection10m24h06']*45
+    dfwxrr['retning'] = dfwxrr['windDirection10m24h06']*45
+    
+    
+    fig, (ax1, ax2, ax3) = plt.subplots(1, 3, subplot_kw=dict(projection='windrose'), figsize=(20,20))
+    
+    ax1.bar(dfwx['retning'], dfwx['windSpeed10m24h06'], normed=True, opening=1.8)
+    ax1.set_title('Generell vindretning - Inndelt i i vindstyrke (m/s)')
+    ax1.set_legend()
+    ax2.bar(dfw['retning'], dfw['rr'], normed=True,opening=1.8)
+    ax2.set_title('Vindretning ved nedbør som snø (mm)', )
+    ax2.set_legend()
+    ax3.bar(dfwxrr['retning'], dfwxrr['rr'], normed=True, opening=1.8)
+    ax3.set_title('Vindretning ved nedbør (mm)')
+    ax3.set_legend()
+
+    return fig
 
 def plot_ekstremverdier(df, ax1=None):
     maxrrsd3 = df['sdfsw3d'].groupby(pd.Grouper(freq='Y')).max()  #3 døgns snømengde
@@ -338,23 +380,27 @@ def plot_ekstremverdier(df, ax1=None):
 
     return model.plot_return_values()
 
-st.title('AV-Klima')
-st.write("Test av klimadata streamlit")
+st.sidebar.title('AV-Klima')
+
 
 #Gi in kordinater for posisjon og start og sluttdato for dataserien.
-lon = st.text_input("Gi NORD koordinat", 6822565)
+lon = st.sidebar.text_input("Gi NORD koordinat", 6822565)
 #lon = 6822565  #Y
-lat = st.text_input("Gi ØST koordinat", 67070)
+lat = st.sidebar.text_input("Gi ØST koordinat", 67070)
 #lat = 67070      #X
-startdato = st.text_input('Gi startdato', '1958-01-01')
-sluttdato = st.text_input('Gi sluttdato', '2019-12-31')
-knapp = st.button('Vis plott')
+#startdato = st.text_input('Gi startdato', '1958-01-01')
+startdato = '1958-01-01'
+#sluttdato = st.text_input('Gi sluttdato', '2019-12-31')
+sluttdato = '2019-12-31'
+knapp = st.sidebar.button('Vis plott')
+
+st.sidebar.write("Nettsida henter ut gridda klimadata frå senorge.no og presenterer disse på plott. Det blir også rekna ut returverdier for 3 døgns snømengde. Ved spørsmål eller feil ta kontakt på jan.aalbu@asplanviak.no")
 
 
 
 
 if knapp:
-    bar = st.progress(10)
+    bar = st.sidebar.progress(10)
     transformer = Transformer.from_crs(5973, 4326)
     trans_x, trans_y =  transformer.transform(lat, lon)
     bar.progress(20)
@@ -378,47 +424,11 @@ if knapp:
     ).add_to(m)
     folium_static(m)
     bar.progress(25)
-    df = klima_dataframe(lat, lon, startdato, sluttdato) 
-    #st.write(df)
-
-
-    # fig, ax = plt.subplots(1)
-    # bar.progress(50)
-    # ax1, ax2 = plot_normaler(df)
-    # bar.progress(60)
-    # st.write(fig)
     
-
-    # fig, ax = plt.subplots(1)
-    # bar.progress(80)
-    # ax1, ax2 = plot_snomengde(df)
-    # bar.progress(100)
-    # fig = plt.figure()
-    # bar.progress(50)
-    # plt.subplot(1,1, 1)
-    # ax1, ax2 = plot_normaler(df)
-    # st.pyplot(fig)
-    # bar.progress(80)
-    # fig = plt.figure()
-    # plt.subplot(1,1,1)
-    # ax3, ax4 = plot_snomengde(df)
-    # bar.progress(100)
-    # plt.savefig('figur1.png')
-    # st.pyplot(fig)
-    # fig = plt.figure()
-    # ax1, ax2 = plot_maks_snodjupne(df)
-    # st.pyplot(fig)
-    # fig = plt.figure()
-    # ax1, ax2 = plot_aarsnedbor(df)
-    # st.pyplot(fig)
-
-    # fig = plt.figure()
-    # ax1 = plot_3dsno(df)
-    # st.pyplot(fig)
-
-    # fig = plt.figure()
-    # ax1 = plot_maks_dognnedbor(df)
-    # st.pyplot(fig)
+    #Lager dataframe fra klimadata
+    df = klima_dataframe(lat, lon, startdato, sluttdato) 
+    
+    #Plotter figur
 
     fig = plt.figure(figsize=(20, 18))
     ax1 = fig.add_subplot(321)
@@ -440,7 +450,7 @@ if knapp:
     bar.progress(80)
     #ax10 = plot_maks_dognnedbor(df)
     ax10, values = plot_ekstremverdier(df)
-    bar.progress(100)
+    bar.progress(90)
     #plt.savefig('samle_figur1.png')
     st.pyplot(fig)
     
@@ -448,12 +458,16 @@ if knapp:
 
 
     #ax, values = plot_ekstremverdier(df)
-  
+    st.write('Returverdier 3 døgn snømengde')
     st.write('100 år: ' + str(round(values[0], 0)))
     st.write('1000 år: ' + str(round(values[1],0)))
     st.write('5000 år: ' + str(round(values[2],0)))
-    #fig, (ax1, ax2, ax3) = plt.subplots(1, 3, subplot_kw=dict(projection='windrose'), figsize=(20,20))
 
+    fig = plot_vind()
+ 
+    
+    st.pyplot(fig)
+    bar.progress(100)
 #ax1 = fig.add_subplot(111)
 #ax2 = fig.add_subplot(112)
 
