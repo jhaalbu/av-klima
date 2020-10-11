@@ -19,7 +19,7 @@ from pyproj import Transformer
 import streamlit as st
 from streamlit_folium import folium_static
 import folium
-import skextremes as ske
+import extreme as e
 
 def nve_api(lat, lon, startdato, sluttdato, para):
     """Henter data frå NVE api GridTimeSeries
@@ -330,7 +330,7 @@ def plot_ekstremverdier(df, ax1=None):
     liste =  maxrr_df['sdfsw3d'].tolist()
     array = np.array(liste)
 
-    model = ske.models.classic.Gumbel(array, fit_method = 'mle', ci = 0.05, ci_method = 'delta')
+    model = e.Gumbel(array, fit_method = 'mle', ci = 0.05, ci_method = 'delta')
     
     if ax1 is None:
         ax1 = plt.gca()
@@ -354,7 +354,7 @@ knapp = st.button('Vis plott')
 
 
 if knapp:
-    bar = st.progress(0)
+    bar = st.progress(10)
     transformer = Transformer.from_crs(5973, 4326)
     trans_x, trans_y =  transformer.transform(lat, lon)
     bar.progress(20)
@@ -377,7 +377,7 @@ if knapp:
         
     ).add_to(m)
     folium_static(m)
-    bar.progress(30)
+    bar.progress(25)
     df = klima_dataframe(lat, lon, startdato, sluttdato) 
     #st.write(df)
 
@@ -422,24 +422,25 @@ if knapp:
 
     fig = plt.figure(figsize=(20, 18))
     ax1 = fig.add_subplot(321)
-    bar.progress(50)
+    bar.progress(30)
     ax1, ax2 = plot_normaler(df)
     ax3 = fig.add_subplot(322)
-    bar.progress(60)
+    bar.progress(40)
     ax3, ax4 = plot_snomengde(df)
     ax5 = fig.add_subplot(323)
-    bar.progress(70)
+    bar.progress(50)
     ax5, ax6 = plot_maks_snodjupne(df)
     ax7 = fig.add_subplot(324)
-    bar.progress(80)
+    bar.progress(60)
     ax7, ax8 = plot_aarsnedbor(df)
     ax9 = fig.add_subplot(325)
-    bar.progress(90)
+    bar.progress(70)
     ax9 = plot_3dsno(df)
     ax10 = fig.add_subplot(326)
-    bar.progress(100)
+    bar.progress(80)
     #ax10 = plot_maks_dognnedbor(df)
     ax10, values = plot_ekstremverdier(df)
+    bar.progress(100)
     #plt.savefig('samle_figur1.png')
     st.pyplot(fig)
     
@@ -449,8 +450,8 @@ if knapp:
     #ax, values = plot_ekstremverdier(df)
   
     st.write('100 år: ' + str(round(values[0], 0)))
-    st.write('1000 år: ' + str(values[1]))
-    st.write('5000 år: ' + str(values[2]))
+    st.write('1000 år: ' + str(round(values[1],0)))
+    st.write('5000 år: ' + str(round(values[2],0)))
     #fig, (ax1, ax2, ax3) = plt.subplots(1, 3, subplot_kw=dict(projection='windrose'), figsize=(20,20))
 
 #ax1 = fig.add_subplot(111)

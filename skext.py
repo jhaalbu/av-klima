@@ -1,4 +1,4 @@
-import skextremes as ske
+import extreme as e
 import matplotlib.pyplot as plt
 import pandas as pd 
 import numpy as np
@@ -8,13 +8,13 @@ data1 = pd.read_csv('barsnes_3dogn_sno.txt')
 liste = data1.iloc[:, 0].tolist()
 print(liste)
 array = np.array(liste)
-data = ske.datasets.portpirie()
+#data = ske.datasets.portpirie()
 
 #print(data.description)
 
 data_array = data1.values.tolist()
 #print(data_array)
-sea_levels = data.fields.sea_level
+#sea_levels = data.fields.sea_level
 
 #print(sea_levels)
 
@@ -29,7 +29,7 @@ sea_levels = data.fields.sea_level
 #model2 = ske.models.classic.GEV(sea_levels, fit_method = 'mle', ci = 0.05, ci_method = 'delta', return_periods=5000)
 #model2 = ske.models.classic.GEV(sea_levels, fit_method = 'mle')
 #model2 = ske.models.classic.GEV(array, fit_method = 'mle', ci = 0.05, ci_method = 'delta')
-model2 = ske.models.classic.Gumbel(array, fit_method = 'mle', ci = 0.05, ci_method = 'delta')
+model2 = e.Gumbel(array, fit_method = 'mle', ci = 0.05, ci_method = 'delta')
 #model.params
 
 # #OrderedDict([('shape', 0.050109518363545352),
