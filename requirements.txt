@@ -6,4 +6,3 @@ requests==2.24.0
 streamlit==0.68.0
 matplotlib==3.3.2
 folium==0.11.0
-lmoments3==1.0.4
