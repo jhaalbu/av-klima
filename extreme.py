@@ -16,7 +16,7 @@ from collections import OrderedDict
 import streamlit as st
 from scipy import stats as _st
 from scipy import optimize as _op
-from lmoments3 import distr as _lmdistr
+#from lmoments3 import distr as _lmdistr
 import numpy as _np
 import matplotlib.pyplot as _plt
 import numdifftools as _ndt
