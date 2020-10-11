@@ -384,9 +384,9 @@ st.sidebar.title('AV-Klima')
 
 
 #Gi in kordinater for posisjon og start og sluttdato for dataserien.
-lon = st.sidebar.text_input("Gi NORD koordinat", 6822565)
+lon = st.sidebar.text_input("Gi NORD koordinat (UTM 33)", 6822565)
 #lon = 6822565  #Y
-lat = st.sidebar.text_input("Gi ØST koordinat", 67070)
+lat = st.sidebar.text_input("Gi ØST koordinat (UTM 33)", 67070)
 #lat = 67070      #X
 #startdato = st.text_input('Gi startdato', '1958-01-01')
 startdato = '1958-01-01'
