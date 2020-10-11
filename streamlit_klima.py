@@ -19,7 +19,7 @@ from pyproj import Transformer
 import streamlit as st
 from streamlit_folium import folium_static
 import folium
-
+import skextremes as ske
 
 def nve_api(lat, lon, startdato, sluttdato, para):
     """Henter data frå NVE api GridTimeSeries
@@ -94,11 +94,51 @@ def klima_dataframe(lat, lon, startdato, sluttdato):
     df[df > 60000] = 0
     return df
 
+def vind_dataframe(lat, lon, startdato, sluttdato):
+    #Vinddata - finnes kun i ein begrensa tidsperiode som grid data!
+    windDirection = nve_api(lat, lon, startdato, sluttdato, 'windDirection10m24h06') #Vindretning for døgnet
+    windSpeed = nve_api(lat, lon, startdato, sluttdato, 'windSpeed10m24h06')
+    rr_vind = nve_api(lat, lon, startdato, sluttdato, 'rr')
+    tm_vind = nve_api(lat, lon, startdato, sluttdato, 'tm')
 
+    #3 timersdata mot vind, fra 2018-03-01 til 2019-12-31
+    windDirection3h = nve_api(lat, lon, startdato, sluttdato, 'windDirection10m3h')
+    windSpeed3h = nve_api(lat, lon, startdato, sluttdato, 'windSpeed10m3h')
+    rr3h_vind = nve_api(lat, lon, startdato, sluttdato, 'rr3h')
+    tm3h_vind = nve_api(lat, lon, startdato, sluttdato, 'tm3h')
 
-#OBS!! Datoer for vinddata oppgis lenger ned i arket (eksister ikkje i like lang periode)
-startdato = '1958-01-01' 
-sluttdato = '2019-12-31'
+    startwind = datetime.datetime(2018, 3, 1)
+    endwind = datetime.datetime(2019, 12, 31)
+
+    
+    #Lager dataframe for daglig vindretning og styrke, sammen med nedbør?
+    dfw = pd.DataFrame(windDirection['Data']) #Henter inn verdiar for vindretning
+    dfw['dato'] = pd.date_range(startwind, endwind) #Lager til datoer som ikkje kjem automatisk frå NVE
+    dfw.rename({0 : windDirection['Theme']}, axis=1, inplace=True) #Gir nytt navn til kolonne med windretning
+    dfw.set_index('dato', inplace=True) #Setter dato som index i dataframe
+    dfw[windSpeed['Theme']] = windSpeed['Data']
+    dfw[rr_vind['Theme']] = rr_vind['Data']
+    dfw[tm_vind['Theme']] = tm_vind['Data']
+
+    dfwx = dfw.copy()
+    indexNames = dfw[dfw['windSpeed10m24h06'] <= 3].index
+    dfw.drop(indexNames , inplace=True)
+    indexNames = dfw[dfw['rr'] <= 5].index
+    dfw.drop(indexNames , inplace=True)
+    indexNames = dfw[dfw['tm'] >= 1].index
+    dfw.drop(indexNames , inplace=True)
+
+    #dfw[dfw > 60000] = 0
+    indexNames = dfwx[dfwx['windDirection10m24h06'] >= 1000].index
+    dfwx.drop(indexNames , inplace=True)
+    indexNames = dfwx[dfwx['windSpeed10m24h06'] >= 1000].index
+    dfwx.drop(indexNames , inplace=True)
+
+    #Lager dataframe med verdier for nedbør over 1 mm
+    dfwxrr = dfwx.copy()
+    indexNames = dfwxrr[dfwxrr['rr'] <= 5].index
+    dfwxrr.drop(indexNames , inplace=True)
+
 
 def plot_normaler(df, ax1=None):
     #Lager dataframe med månedsvise mengder av temperatur og nedbør GRAF1
@@ -250,6 +290,7 @@ def plot_maks_dognnedbor(df, ax1=None):
     maxrr_df = pd.concat ([maxrr, maxrr3, maxrrsd3], axis=1)
     maksimal_rrdato = df['rr'].idxmax().date()
     maksimal_rr = df['rr'].max()
+
     if ax1 is None:
         ax1 = plt.gca()
 
@@ -265,6 +306,38 @@ def plot_maks_dognnedbor(df, ax1=None):
 
     return ax1
 
+# def plot_generell_vind(df, ax1=None):
+
+#     if ax1 is None:
+#         ax1 = plt.gca()
+
+#     ax1.bar(dfwx['retning'], dfwx['windSpeed10m24h06'], normed=True, opening=1.8)
+#     ax1.set_title('Generell vindretning - Inndelt i i vindstyrke (m/s)')
+#     ax1.set_legend()
+#     ax2.bar(dfw['retning'], dfw['rr'], normed=True,opening=1.8)
+#     ax2.set_title('Vindretning ved nedbør som snø (mm)', )
+#     ax2.set_legend()
+#     ax3.bar(dfwxrr['retning'], dfwxrr['rr'], normed=True, opening=1.8)
+#     ax3.set_title('Vindretning ved nedbør (mm)')
+#     ax3.set_legend()
+
+def plot_ekstremverdier(df, ax1=None):
+    maxrrsd3 = df['sdfsw3d'].groupby(pd.Grouper(freq='Y')).max()  #3 døgns snømengde
+    maxrr = df['rr'].groupby(pd.Grouper(freq='Y')).max()
+    maxrr3 = df['rr3'].groupby(pd.Grouper(freq='Y')).max()
+    maxrr_df = pd.concat ([maxrr, maxrr3, maxrrsd3], axis=1)
+   
+    liste =  maxrr_df['sdfsw3d'].tolist()
+    array = np.array(liste)
+
+    model = ske.models.classic.Gumbel(array, fit_method = 'mle', ci = 0.05, ci_method = 'delta')
+    
+    if ax1 is None:
+        ax1 = plt.gca()
+    #fig = plt.figure()
+
+    return model.plot_return_values()
+
 st.title('AV-Klima')
 st.write("Test av klimadata streamlit")
 
@@ -273,7 +346,12 @@ lon = st.text_input("Gi NORD koordinat", 6822565)
 #lon = 6822565  #Y
 lat = st.text_input("Gi ØST koordinat", 67070)
 #lat = 67070      #X
-knapp = st.button('Vis plot')
+startdato = st.text_input('Gi startdato', '1958-01-01')
+sluttdato = st.text_input('Gi sluttdato', '2019-12-31')
+knapp = st.button('Vis plott')
+
+
+
 
 if knapp:
     bar = st.progress(0)
@@ -360,9 +438,23 @@ if knapp:
     ax9 = plot_3dsno(df)
     ax10 = fig.add_subplot(326)
     bar.progress(100)
-    ax10 = plot_maks_dognnedbor(df)
+    #ax10 = plot_maks_dognnedbor(df)
+    ax10, values = plot_ekstremverdier(df)
     #plt.savefig('samle_figur1.png')
     st.pyplot(fig)
     
+    
+
+
+    #ax, values = plot_ekstremverdier(df)
+  
+    st.write('100 år: ' + str(round(values[0], 0)))
+    st.write('1000 år: ' + str(values[1]))
+    st.write('5000 år: ' + str(values[2]))
+    #fig, (ax1, ax2, ax3) = plt.subplots(1, 3, subplot_kw=dict(projection='windrose'), figsize=(20,20))
+
+#ax1 = fig.add_subplot(111)
+#ax2 = fig.add_subplot(112)
+
 #plot_something(data1, ax1, color='blue')
 #plot_something(data2, ax2, color='red')
