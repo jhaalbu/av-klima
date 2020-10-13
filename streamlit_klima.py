@@ -94,6 +94,14 @@ def klima_dataframe(lat, lon, startdato, sluttdato):
     df[df > 60000] = 0
     return df
 
+def max_df(df):
+    maxrrsd3 = df['sdfsw3d'].groupby(pd.Grouper(freq='Y')).max()  #3 døgns snømengde
+    maxrr = df['rr'].groupby(pd.Grouper(freq='Y')).max()
+    maxrr3 = df['rr3'].groupby(pd.Grouper(freq='Y')).max()
+    maxrr_df = pd.concat ([maxrr, maxrr3, maxrrsd3], axis=1)
+
+    return maxrr_df
+
 def vind_dataframe(lat, lon, startdato, sluttdato):
     #Vinddata - finnes kun i ein begrensa tidsperiode som grid data!
     windDirection = nve_api(lat, lon, startdato, sluttdato, 'windDirection10m24h06') #Vindretning for døgnet
@@ -363,20 +371,25 @@ def plot_vind(ax1=None):
 
     return fig
 
-def plot_ekstremverdier(df, ax1=None):
-    maxrrsd3 = df['sdfsw3d'].groupby(pd.Grouper(freq='Y')).max()  #3 døgns snømengde
-    maxrr = df['rr'].groupby(pd.Grouper(freq='Y')).max()
-    maxrr3 = df['rr3'].groupby(pd.Grouper(freq='Y')).max()
-    maxrr_df = pd.concat ([maxrr, maxrr3, maxrrsd3], axis=1)
-   
+def plot_ekstremverdier_3dsno(maxrr_df, ax1=None):
+       
     liste =  maxrr_df['sdfsw3d'].tolist()
     array = np.array(liste)
-
     model = e.Gumbel(array, fit_method = 'mle', ci = 0.05, ci_method = 'delta')
     
     if ax1 is None:
         ax1 = plt.gca()
-    #fig = plt.figure()
+
+    return model.plot_return_values()
+
+def plot_ekstremverdier_1drr(maxrr_df, ax1=None):
+       
+    liste =  maxrr_df['rr'].tolist()
+    array = np.array(liste)
+    model = e.Gumbel(array, fit_method = 'mle', ci = 0.05, ci_method = 'delta')
+    
+    if ax1 is None:
+        ax1 = plt.gca()
 
     return model.plot_return_values()
 
@@ -384,9 +397,12 @@ st.sidebar.title('AV-Klima')
 
 
 #Gi in kordinater for posisjon og start og sluttdato for dataserien.
+lokalitet = st.sidebra.text_input("Gi navn til lokalitet", Blåfjellet)
 lon = st.sidebar.text_input("Gi NORD koordinat (UTM 33)", 6822565)
 #lon = 6822565  #Y
 lat = st.sidebar.text_input("Gi ØST koordinat (UTM 33)", 67070)
+lon = int(lon)
+lat = int(lat)
 #lat = 67070      #X
 #startdato = st.text_input('Gi startdato', '1958-01-01')
 startdato = '1958-01-01'
@@ -431,6 +447,7 @@ if knapp:
     #Plotter figur
 
     fig = plt.figure(figsize=(20, 18))
+    fig.suptitle(f'Klimaoversikt for {lokalitet}', fontsize=16)
     ax1 = fig.add_subplot(321)
     bar.progress(30)
     ax1, ax2 = plot_normaler(df)
@@ -449,7 +466,7 @@ if knapp:
     ax10 = fig.add_subplot(326)
     bar.progress(80)
     #ax10 = plot_maks_dognnedbor(df)
-    ax10, values = plot_ekstremverdier(df)
+    ax10, values = plot_ekstremverdier_3dsno(df)
     bar.progress(90)
     #plt.savefig('samle_figur1.png')
     st.pyplot(fig)
