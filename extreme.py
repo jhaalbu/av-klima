@@ -265,7 +265,7 @@ class _Base:
         ax.set_xlim(low_lim, high_lim)
         ax.set_ylim(low_lim, high_lim)
         
-    def plot_return_values(self, ax=None):
+    def plot_return_values(self, returparameter, ax=None):
         """
         Omforma for AV KLIMA
         Return values and return periods of data. If confidence interval 
@@ -276,7 +276,12 @@ class _Base:
         
         Return values and return periods plot. 
         """
-        
+        verdier_returpara = {
+            '3ds':['Ekstremverdier 3 døgn snø (Gumbel)', 'Returperiode (år)','Snømengde (cm)'],
+            '1drr':['Ekstremverdier 1 døgn nedbør (Gumbel)', 'Returperiode (år)','Nedbør (mm)'],
+            'sd':['Ekstremverdier maks snøhøgde (Gumbel)', 'Returperiode (år)','Snøhøgde (cm)']
+        }
+
         #fig, ax = _plt.subplots(figsize=(8, 6))
         if ax is None:
             ax = _plt.gca()
@@ -285,14 +290,14 @@ class _Base:
         sT = self.distr.isf(self.frec * 1./T)
         N = _np.r_[1:len(self.data)+1] * self.frec
         Nmax = max(N)
-        print('100:' + str(self.distr.isf(self.frec * 1./100)))
+        #print('100:' + str(self.distr.isf(self.frec * 1./100)))
         e100 = self.distr.isf(self.frec * 1./100)
-        print('1000:' + str(self.distr.isf(self.frec * 1./1000)))
+        #print('1000:' + str(self.distr.isf(self.frec * 1./1000)))
         e1000 = self.distr.isf(self.frec * 1./1000)
-        print('5000:' + str(self.distr.isf(self.frec * 1./5000)))
+        #print('5000:' + str(self.distr.isf(self.frec * 1./5000)))
         e5000 = self.distr.isf(self.frec * 1./5000)
         # plot
-        ax = self._plot(ax, 'Ekstremverdier 3 døgn snø (Gumbel)', 'Returperiode', 'Returverdi')
+        ax = self._plot(ax, verdier_returpara[returparameter][0], verdier_returpara[returparameter][1], verdier_returpara[returparameter][2])
         ax.semilogx(T, sT)
         ax.scatter(self.frec * Nmax/N, sorted(self.data)[::-1], color = 'orangered')
 
