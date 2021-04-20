@@ -504,7 +504,7 @@ if knapp:
     df = klima_dataframe(lat, lon, startdato, sluttdato) 
 
     #Plotter figur
-    logo = plt.imread('logo_av_asplanviak.png')
+    #logo = plt.imread('logo_av_asplanviak.png')
     fig = plt.figure(figsize=(20, 18))
     #fig.suptitle('Klimasammendrag for' + lokalitet, fontsize=16)
     #fig.suptitle(f'Klimaoversikt for {lokalitet}', fontsize=16, verticalalignment='bottom')
@@ -530,7 +530,7 @@ if knapp:
     bar.progress(70)
     #plt.savefig('samle_figur1.png')
     st.write('Figur med klimadata, trykk på piler i høgre hjørne av figuren for å vise fullskjerm')
-    ax9.figure.figimage(logo, 20, 20, alpha=.30, zorder=1)
+    #ax9.figure.figimage(logo, 20, 20, alpha=.30, zorder=1)
     fig.suptitle(f'Klimaoversikt for {lokalitet}', fontsize=30, y=0.9, va='bottom')
     st.pyplot(fig)
     
