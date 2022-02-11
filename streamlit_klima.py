@@ -370,7 +370,7 @@ def plot_vind(ax1=None):
     dfwx = dfw.copy()
     indexNames = dfw[dfw['windSpeed10m24h06'] <= 3].index
     dfw.drop(indexNames , inplace=True)
-    indexNames = dfw[dfw['rr'] <= 10].index
+    indexNames = dfw[dfw['rr'] <= 1].index
     dfw.drop(indexNames , inplace=True)
     indexNames = dfw[dfw['tm'] >= 1].index
     dfw.drop(indexNames , inplace=True)
@@ -385,9 +385,9 @@ def plot_vind(ax1=None):
     
 
 
-    #Lager dataframe med verdier for nedbør over 3 mm
+    #Lager dataframe med verdier for nedbør over 1 mm
     dfwxrr = dfwx.copy()
-    indexNames = dfwxrr[dfwxrr['rr'] <= 5].index
+    indexNames = dfwxrr[dfwxrr['rr'] <= 1].index
     dfwxrr.drop(indexNames , inplace=True)
     indexNames = dfwxrr[dfwxrr['tm'] < 1].index
     dfwxrr.drop(indexNames , inplace=True)
