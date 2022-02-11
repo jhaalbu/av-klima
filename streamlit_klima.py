@@ -400,17 +400,17 @@ def plot_vind(ax1=None):
     fig, (ax1, ax2, ax3) = plt.subplots(1, 3, subplot_kw=dict(projection='windrose'), figsize=(20,20))
     
     ax1.bar(dfwx['retning'], dfwx['windSpeed10m24h06'], normed=True, opening=1.8)
-    ax1.set_title('Antall dager med gitt vindretning')
+    ax1.set_title('%-vis dager med gitt vindretning')
     #ax1.legend(title='Vindstyrke (m/s')
     ax1.set_legend(title='Vindstyrke (m/s)')
 
     ax2.bar(dfwxrr['retning'], dfwxrr['rr'], normed=True, opening=1.8)
-    ax2.set_title('Antall dager med gitt vindretning ved nedbør ')
+    ax2.set_title('%-vis dager med gitt vindretning og nedbør')
     ax2.set_legend(title='Nedbør (mm)')
 
     ax3.bar(dfw['retning'], dfw['rr'], normed=True,opening=1.8)
-    ax3.set_title('Antall dager med gitt vindretning ved nedbør som snø', )
-    ax3.set_legend(title='Snø (mm)')
+    ax3.set_title('%-vis dager med gitt vindretning og snø', )
+    ax3.set_legend(title='Nedbør, temp < 1 grad (mm)')
 
     return fig
 
@@ -559,6 +559,7 @@ if knapp:
 
     #ax, values = plot_ekstremverdier(df)
     st.write('Returverdier 3 døgn snømengde ' + lokalitet)
+    st.write('Basert på snøkart')
     st.write('100 år: ' + str(round(values_3ds[0], 0)))
     st.write('1000 år: ' + str(round(values_3ds[1],0)))
     st.write('5000 år: ' + str(round(values_3ds[2],0)))
@@ -568,10 +569,10 @@ if knapp:
     st.write('1000 år: ' + str(round(values_1drr[1],0)))
     st.write('5000 år: ' + str(round(values_1drr[2],0)))
 
-    st.write('Returverdier snøhøgde')
-    st.write('100 år: ' + str(round(values_sd[0], 0)))
-    st.write('1000 år: ' + str(round(values_sd[1],0)))
-    st.write('5000 år: ' + str(round(values_sd[2],0)))
+#     st.write('Returverdier snøhøgde')
+#     st.write('100 år: ' + str(round(values_sd[0], 0)))
+#     st.write('1000 år: ' + str(round(values_sd[1],0)))
+#     st.write('5000 år: ' + str(round(values_sd[2],0)))
     bar.progress(90)  
 
     
