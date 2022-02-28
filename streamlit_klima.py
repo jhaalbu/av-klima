@@ -158,21 +158,23 @@ def plot_normaler(df, ax1=None):
 
     mon_rr = df['rr'].groupby(pd.Grouper(freq='M')).sum() #Grupperer nedbør etter måneder per år og summerer
     mon_tm = df['tm'].groupby(pd.Grouper(freq='M')).mean() #Grupperer temperatur etter måneder per år og tar snitt
-    month_rr_temp = mon_rr.to_frame() #Lager dataframe, unødvendig? Eklere å plotte?
+    month_rr = mon_rr.to_frame() #Lager dataframe, unødvendig? Eklere å plotte?
     month_tm = mon_tm.to_frame() #Lager dataframe, unødvendig? Eklere å plotte?
-    startaar = int(str(month_rr_temp.index[0])[0:4])
-    sluttaar = int(str(month_rr_temp.index[-1])[0:4])
-    month_rr = month_rr_temp['rr'].groupby(month_rr_temp.index.month).sum()/(sluttaar-startaar)
+    startaar = int(str(month_rr.index[0])[0:4])
+    sluttaar = int(str(month_rr.index[-1])[0:4])
+    month_rr_just = month_rr['rr'].groupby(month_rr.index.month).sum()/(sluttaar-startaar)
+    month_rr_just_df = month_rr_just.to_frame()
+    print(month_rr_just_df)
     month_rr['m'] = pd.DatetimeIndex(month_rr.index).month #lager kolonne for månedsnummer
     month_tm['m'] = pd.DatetimeIndex(month_tm.index).month #Lager kolonne for månedsnummer
     month_mean_tm = month_tm.groupby(['m']).mean()
     if ax1 is None:
         ax1 = plt.gca()
     ax1.set_title('Gjennomsnittlig månedsnedbør og temperatur ' + startdato[0:4] + ' til ' + sluttdato[0:4])
-    ax1.bar(month_rr['m'], month_rr['rr'], width=0.5, snap=False)
+    ax1.bar(month_rr_just_df.index, month_rr_just_df['rr'], width=0.5, snap=False)
     ax1.set_xlabel('Måned')
     ax1.set_ylabel('Nedbør (mm)')
-    ax1.set_ylim(0, month_rr['rr'].max()+50)
+    ax1.set_ylim(0, month_rr_just_df['rr'].max()+20)
     #ax1.text('1960', aar_df['rr'].max()+20, "Gjennomsnittlig månedsnedbør:  " + str(int(snitt)) + ' mm')
 
     ax2 = ax1.twinx()#Setter ny akse på høgre side 
