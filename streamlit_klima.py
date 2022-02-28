@@ -158,8 +158,11 @@ def plot_normaler(df, ax1=None):
 
     mon_rr = df['rr'].groupby(pd.Grouper(freq='M')).sum() #Grupperer nedbør etter måneder per år og summerer
     mon_tm = df['tm'].groupby(pd.Grouper(freq='M')).mean() #Grupperer temperatur etter måneder per år og tar snitt
-    month_rr = mon_rr.to_frame() #Lager dataframe, unødvendig? Eklere å plotte?
+    month_rr_temp = mon_rr.to_frame() #Lager dataframe, unødvendig? Eklere å plotte?
     month_tm = mon_tm.to_frame() #Lager dataframe, unødvendig? Eklere å plotte?
+    startaar = int(str(month_rr_temp.index[0])[0:4])
+    sluttaar = int(str(month_rr_temp.index[-1])[0:4])
+    month_rr = month_rr_temp['rr'].groupby(month_rr.index.month).sum()/(sluttaar-startaar)
     month_rr['m'] = pd.DatetimeIndex(month_rr.index).month #lager kolonne for månedsnummer
     month_tm['m'] = pd.DatetimeIndex(month_tm.index).month #Lager kolonne for månedsnummer
     month_mean_tm = month_tm.groupby(['m']).mean()
