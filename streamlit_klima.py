@@ -578,7 +578,7 @@ if knapp:
 #     st.write('100 år: ' + str(round(values_sd[0], 0)))
 #     st.write('1000 år: ' + str(round(values_sd[1],0)))
 #     st.write('5000 år: ' + str(round(values_sd[2],0)))
-    bar.progress(90)  
+    bar.progress(95)  
 
     
     bar.progress(100)
